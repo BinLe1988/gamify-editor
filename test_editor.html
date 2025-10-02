@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏化编辑器测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            font-family: monospace;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .game-status {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 代码解析器测试</h1>
+    
+    <div class="game-status">
+        <h3>游戏状态</h3>
+        <div id="gameStatus">游戏未初始化</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>代码输入</h3>
+        <textarea id="codeInput" placeholder="输入Python代码...">
+# 示例代码
+wood + 100
+stone + 50
+build wall at (3, 4)
+move colonist to (5, 5)
+auto on</textarea>
+        <br>
+        <button onclick="runTest()">🚀 执行代码</button>
+        <button onclick="clearResults()">🗑️ 清空结果</button>
+        <button onclick="loadExample()">📝 加载示例</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>执行结果</h3>
+        <div id="results"></div>
+    </div>
+
+    <script src="code_interpreter.js"></script>
+    <script>
+        // 模拟游戏对象
+        class MockGame {
+            constructor() {
+                this.resources = {wood: 100, stone: 50, food: 200, metal: 30};
+                this.buildings = [];
+                this.colonists = [{name: '测试殖民者', x: 2, y: 2, hp: 3, maxHp: 3, isDowned: false}];
+                this.selectedColonist = this.colonists[0];
+                this.autoMode = false;
+                this.weather = 'sunny';
+                this.temperature = 20;
+                this.mapSize = 12;
+                this.buildingTypes = {
+                    wall: {cost: {wood: 2}, hp: 100},
+                    house: {cost: {wood: 8, stone: 4}, hp: 150},
+                    bed: {cost: {wood: 5}, hp: 50}
+                };
+            }
+
+            updateUI() {
+                this.displayGameStatus();
+            }
+
+            draw() {
+                console.log('游戏重绘');
+            }
+
+            displayGameStatus() {
+                const status = document.getElementById('gameStatus');
+                status.innerHTML = `
+                    <strong>资源:</strong> 木材:${this.resources.wood}, 石头:${this.resources.stone}, 食物:${this.resources.food}, 金属:${this.resources.metal}<br>
+                    <strong>建筑数量:</strong> ${this.buildings.length}<br>
+                    <strong>殖民者:</strong> ${this.colonists[0].name} (${this.colonists[0].x}, ${this.colonists[0].y}) HP:${this.colonists[0].hp}<br>
+                    <strong>自动模式:</strong> ${this.autoMode ? '开启' : '关闭'}<br>
+                    <strong>天气:</strong> ${this.weather}, 温度:${this.temperature}°C
+                `;
+            }
+
+            startAutoTasks() {
+                console.log('启动自动任务');
+            }
+
+            stopAutoTasks() {
+                console.log('停止自动任务');
+            }
+
+            triggerDisaster(type) {
+                console.log(`触发灾害: ${type}`);
+                // 模拟灾害效果
+                if (type === 'flood' || type === '洪水') {
+                    this.resources.wood = Math.max(0, this.resources.wood - 20);
+                } else if (type === 'earthquake' || type === '地震') {
+                    this.resources.stone = Math.max(0, this.resources.stone - 15);
+                }
+                this.updateUI();
+            }
+
+            displayCodeResults(summary) {
+                const resultsDiv = document.getElementById('results');
+                let html = '<div class="code-execution-results">';
+                html += `<h4>🔧 代码执行结果</h4>`;
+                html += `<p>总操作数: ${summary.totalActions}, 成功: ${summary.successfulActions}, 失败: ${summary.failedActions}</p>`;
+                
+                if (summary.results.length > 0) {
+                    html += '<div class="results-list">';
+                    summary.results.forEach((result, index) => {
+                        const status = result.success ? '✅' : '❌';
+                        const className = result.success ? 'success' : 'error';
+                        html += `<div class="result-item ${className}">`;
+                        html += `<span class="status">${status}</span>`;
+                        html += `<span class="action">${result.action || result.error}</span>`;
+                        html += `<small class="code-line">${result.line}</small>`;
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+            }
+
+            executePythonCode(code) {
+                if (!this.codeInterpreter) {
+                    return {
+                        success: false,
+                        error: '代码解析器未初始化'
+                    };
+                }
+
+                try {
+                    const results = this.codeInterpreter.interpretCode(code);
+                    
+                    const summary = {
+                        success: true,
+                        totalActions: results.length,
+                        successfulActions: results.filter(r => r.success).length,
+                        failedActions: results.filter(r => !r.success).length,
+                        results: results
+                    };
+
+                    this.displayCodeResults(summary);
+                    return summary;
+                } catch (error) {
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+        }
+
+        // 初始化测试环境
+        let mockGame = new MockGame();
+        mockGame.codeInterpreter = new CodeInterpreter(mockGame);
+        mockGame.displayGameStatus();
+
+        function runTest() {
+            const code = document.getElementById('codeInput').value;
+            if (!code.trim()) {
+                document.getElementById('results').innerHTML = '<div class="error">请输入代码</div>';
+                return;
+            }
+
+            const result = mockGame.executePythonCode(code);
+            console.log('执行结果:', result);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function loadExample() {
+            const examples = [
+                `# 资源管理示例
+wood + 100
+stone + 50
+food + 200`,
+                `# 建筑示例
+build wall at (3, 4)
+build house at (5, 6)
+build bed at (7, 8)`,
+                `# 殖民者操作示例
+move colonist to (8, 9)
+heal colonist
+auto on`,
+                `# 环境控制示例
+weather = "rainy"
+temperature = 15
+disaster flood`
+            ];
+            
+            const randomExample = examples[Math.floor(Math.random() * examples.length)];
+            document.getElementById('codeInput').value = randomExample;
+        }
+    </script>
+</body>
+</html>
