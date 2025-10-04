@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏化编辑器 - Gamify Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        .card p {
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .card-features {
+            list-style: none;
+        }
+
+        .card-features li {
+            color: #4a5568;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .card-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #48bb78;
+            font-weight: bold;
+        }
+
+        .cta {
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🎮 游戏化编辑器</h1>
+        <p>将游戏化融入编程教育，创造互动式学习体验</p>
+    </header>
+
+    <div class="container">
+        <div class="grid">
+            <div class="card" onclick="openScenario('programming')">
+                <span class="card-icon">💻</span>
+                <h3>编程入门</h3>
+                <p>通过游戏化方式学习编程基础，让代码变得有趣易懂</p>
+                <ul class="card-features">
+                    <li>可视化代码执行</li>
+                    <li>实时反馈系统</li>
+                    <li>零环境依赖</li>
+                </ul>
+            </div>
+
+            <div class="card" onclick="openScenario('algorithm')">
+                <span class="card-icon">🧩</span>
+                <h3>算法可视化</h3>
+                <p>将抽象的算法概念转化为直观的视觉体验</p>
+                <ul class="card-features">
+                    <li>动画演示过程</li>
+                    <li>交互式操作</li>
+                    <li>复杂度分析</li>
+                </ul>
+            </div>
+
+            <div class="card" onclick="openScenario('datastructure')">
+                <span class="card-icon">🏗️</span>
+                <h3>数据结构</h3>
+                <p>通过3D可视化理解栈、队列、树等数据结构</p>
+                <ul class="card-features">
+                    <li>3D立体展示</li>
+                    <li>操作动画效果</li>
+                    <li>内存布局可视化</li>
+                </ul>
+            </div>
+
+            <div class="card" onclick="openScenario('math')">
+                <span class="card-icon">📊</span>
+                <h3>数学建模</h3>
+                <p>将数学公式转化为互动图形，增强理解效果</p>
+                <ul class="card-features">
+                    <li>函数图像绘制</li>
+                    <li>参数实时调节</li>
+                    <li>几何图形操作</li>
+                </ul>
+            </div>
+
+            <div class="card" onclick="openScenario('physics')">
+                <span class="card-icon">⚡</span>
+                <h3>物理仿真</h3>
+                <p>通过代码控制物理现象，学习编程与物理知识</p>
+                <ul class="card-features">
+                    <li>重力模拟</li>
+                    <li>碰撞检测</li>
+                    <li>粒子系统</li>
+                </ul>
+            </div>
+
+            <div class="card" onclick="openScenario('game')">
+                <span class="card-icon">🎯</span>
+                <h3>游戏开发</h3>
+                <p>从零开始创建简单游戏，学习游戏开发基础</p>
+                <ul class="card-features">
+                    <li>角色控制</li>
+                    <li>关卡设计</li>
+                    <li>得分系统</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="cta">
+            <a href="#" class="btn" onclick="startEditor()">开始创作 →</a>
+        </div>
+    </div>
+
+    <script>
+        function openScenario(type) {
+            console.log(`Opening scenario: ${type}`);
+            // 这里可以跳转到具体的场景页面
+            alert(`即将进入${getScenarioName(type)}场景`);
+        }
+
+        function getScenarioName(type) {
+            const names = {
+                'programming': '编程入门',
+                'algorithm': '算法可视化',
+                'datastructure': '数据结构',
+                'math': '数学建模',
+                'physics': '物理仿真',
+                'game': '游戏开发'
+            };
+            return names[type] || '未知场景';
+        }
+
+        function startEditor() {
+            console.log('Starting editor...');
+            alert('编辑器即将启动！');
+        }
+
+        // 添加卡片悬停效果
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
