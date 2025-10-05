@@ -1,0 +1,249 @@
+.drag-editor {
+    display: grid;
+    grid-template-columns: 300px 1fr 300px;
+    gap: 20px;
+    height: 70vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.blocks-palette, .drop-zone, .output-panel {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.blocks-palette h3, .drop-zone h3, .output-panel h3 {
+    margin: 0 0 15px 0;
+    color: #2d3748;
+    font-size: 1.1rem;
+}
+
+.blocks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: calc(100% - 50px);
+    overflow-y: auto;
+}
+
+.code-block {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: grab;
+    transition: transform 0.2s, box-shadow 0.2s;
+    user-select: none;
+}
+
+.code-block:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+.code-block:active {
+    cursor: grabbing;
+}
+
+.block-text {
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+}
+
+.block-code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    opacity: 0.9;
+    background: rgba(255,255,255,0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.drop-area {
+    min-height: 300px;
+    border: 2px dashed #cbd5e0;
+    border-radius: 8px;
+    padding: 15px;
+    background: #f7fafc;
+    transition: all 0.3s;
+}
+
+.drop-area.drag-over {
+    border-color: #667eea;
+    background: #edf2f7;
+}
+
+.drop-placeholder {
+    text-align: center;
+    color: #a0aec0;
+    font-style: italic;
+    margin-top: 100px;
+}
+
+.dropped-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #e2e8f0;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border-left: 4px solid #48bb78;
+}
+
+.block-order {
+    background: #48bb78;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.dropped-block .block-text {
+    flex: 1;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.remove-btn {
+    background: #e53e3e;
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.remove-btn:hover {
+    background: #c53030;
+}
+
+.execute-btn {
+    width: 100%;
+    padding: 12px;
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background 0.2s;
+}
+
+.execute-btn:hover:not(:disabled) {
+    background: #38a169;
+}
+
+.execute-btn:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+}
+
+.output-content {
+    max-height: calc(100% - 50px);
+    overflow-y: auto;
+    font-size: 0.9rem;
+}
+
+.success-message {
+    background: #c6f6d5;
+    color: #22543d;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.error-message {
+    background: #fed7d7;
+    color: #742a2a;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.success-line {
+    color: #22543d;
+    padding: 4px 0;
+    border-left: 3px solid #48bb78;
+    padding-left: 8px;
+    margin: 4px 0;
+}
+
+.error-line {
+    color: #742a2a;
+    padding: 4px 0;
+    border-left: 3px solid #e53e3e;
+    padding-left: 8px;
+    margin: 4px 0;
+}
+
+.hint {
+    background: #bee3f8;
+    color: #2a4365;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-top: 8px;
+}
+
+.visualization {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.success-animation {
+    position: relative;
+    padding: 20px;
+}
+
+.checkmark {
+    font-size: 3rem;
+    color: #48bb78;
+    animation: bounce 0.6s ease-in-out;
+}
+
+.success-text {
+    color: #22543d;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.particles {
+    position: relative;
+    height: 50px;
+}
+
+.particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #48bb78;
+    border-radius: 50%;
+    animation: float 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-20px); }
+    60% { transform: translateY(-10px); }
+}
+
+@keyframes float {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(-50px) rotate(360deg); opacity: 0; }
+}

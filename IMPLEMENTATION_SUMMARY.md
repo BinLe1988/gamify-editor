@@ -6,13 +6,15 @@
 
 ## ✅ 已实现功能
 
-### 1. 核心代码解析器 (`code_interpreter.js`)
+### 1. 核心代码解析器 (`gamify_editor.js`)
 - **智能模式匹配**: 使用正则表达式识别代码意图
 - **多语言支持**: 同时支持中文和英文指令
 - **模块化设计**: 按功能分类组织解析规则
 - **错误处理**: 完善的异常捕获和用户友好的错误提示
 
-### 2. 支持的操作类型
+<!-- ### 2. 支持的操作类型
+
+#### 以殖民者沙盒游戏为例：
 
 #### 资源管理
 ```python
@@ -65,7 +67,7 @@ disaster flood           # 触发洪水
 ### 5. 测试和文档
 - **独立测试环境**: `test_interpreter.html` 提供完整的测试界面
 - **详细文档**: 包含使用示例和技术说明
-- **演示脚本**: `demo_code_interpreter.py` 展示所有功能
+- **演示脚本**: `demo_code_interpreter.py` 展示所有功能 -->
 
 ## 🚀 技术创新点
 
@@ -90,12 +92,12 @@ disaster flood           # 触发洪水
 
 ## 📊 实现效果
 
-### 代码解析准确性
+<!-- ### 代码解析准确性
 - ✅ 资源操作：100% 支持
 - ✅ 殖民者控制：100% 支持  
 - ✅ 建筑系统：100% 支持
 - ✅ 游戏控制：100% 支持
-- ✅ 环境控制：100% 支持
+- ✅ 环境控制：100% 支持 -->
 
 ### 用户体验
 - ✅ 即时反馈：代码执行后立即看到游戏变化
@@ -136,7 +138,7 @@ CodeInterpreter.interpretCode()
 2. **RimWorldGame集成**
    - `executePythonCode(code)`: 游戏端执行接口
    - `displayCodeResults(summary)`: 结果展示
-   - `triggerDisaster(type)`: 灾害触发
+   <!-- - `triggerDisaster(type)`: 灾害触发 -->
 
 3. **UI集成**
    - `runAdventureCode()`: 修改后的代码执行函数
