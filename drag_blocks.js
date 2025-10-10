@@ -55,9 +55,11 @@ class DragBlocksEditor {
         const isGameScenario = this.scenario === 'game';
         const isAlgorithmScenario = this.scenario === 'algorithm';
         const isPhysicsScenario = this.scenario === 'physics';
+        const isDataStructureScenario = this.scenario === 'datastructure';
+        const isMathScenario = this.scenario === 'math';
         
         return `
-            <div class="drag-editor ${isGameScenario ? 'game-mode' : ''} ${isAlgorithmScenario ? 'algorithm-mode' : ''} ${isPhysicsScenario ? 'physics-mode' : ''}">
+            <div class="drag-editor ${isGameScenario ? 'game-mode' : ''} ${isAlgorithmScenario ? 'algorithm-mode' : ''} ${isPhysicsScenario ? 'physics-mode' : ''} ${isDataStructureScenario ? 'datastructure-mode' : ''} ${isMathScenario ? 'math-mode' : ''}">
                 <div class="blocks-palette">
                     <h3>代码块</h3>
                     <div class="blocks-container" id="blocksContainer">
@@ -112,6 +114,30 @@ class DragBlocksEditor {
                     <canvas id="physicsCanvas" class="physics-canvas"></canvas>
                     <div class="physics-controls">
                         <div class="control-hint">💡 观察物理力学现象的真实过程</div>
+                    </div>
+                </div>
+                ` : isDataStructureScenario ? `
+                <div class="datastructure-panel">
+                    <h3>数据结构可视化</h3>
+                    <div class="datastructure-info">
+                        <span id="datastructureStatus">准备就绪</span>
+                        <button onclick="datastructureVisualizer?.reset()" class="reset-btn">重置</button>
+                    </div>
+                    <canvas id="datastructureCanvas" class="datastructure-canvas"></canvas>
+                    <div class="datastructure-controls">
+                        <div class="control-hint">💡 观察数据结构的动态变化过程</div>
+                    </div>
+                </div>
+                ` : isMathScenario ? `
+                <div class="math-panel">
+                    <h3>数学可视化</h3>
+                    <div class="math-info">
+                        <span id="mathStatus">准备就绪</span>
+                        <button onclick="mathVisualizer?.reset()" class="reset-btn">重置</button>
+                    </div>
+                    <canvas id="mathCanvas" class="math-canvas"></canvas>
+                    <div class="math-controls">
+                        <div class="control-hint">💡 观察数学函数和图形的绘制过程</div>
                     </div>
                 </div>
                 ` : `
@@ -188,6 +214,20 @@ class DragBlocksEditor {
                 window.physicsSimulator = new PhysicsSimulator('physicsCanvas');
             }, 100);
         }
+        
+        // 如果是数据结构场景，初始化数据结构可视化器
+        if (this.scenario === 'datastructure') {
+            setTimeout(() => {
+                window.datastructureVisualizer = new DataStructureVisualizer('datastructureCanvas');
+            }, 100);
+        }
+        
+        // 如果是数学场景，初始化数学可视化器
+        if (this.scenario === 'math') {
+            setTimeout(() => {
+                window.mathVisualizer = new MathVisualizer('mathCanvas');
+            }, 100);
+        }
     }
 
     addBlockToDropArea(blockId) {
@@ -241,7 +281,9 @@ class DragBlocksEditor {
         const isGameScenario = this.scenario === 'game';
         const isAlgorithmScenario = this.scenario === 'algorithm';
         const isPhysicsScenario = this.scenario === 'physics';
-        const output = (isGameScenario || isAlgorithmScenario || isPhysicsScenario) ? 
+        const isDataStructureScenario = this.scenario === 'datastructure';
+        const isMathScenario = this.scenario === 'math';
+        const output = (isGameScenario || isAlgorithmScenario || isPhysicsScenario || isDataStructureScenario || isMathScenario) ? 
             document.createElement('div') : 
             document.getElementById('dragOutput');
         
@@ -277,6 +319,16 @@ class DragBlocksEditor {
                         if (isPhysicsScenario && window.physicsSimulator) {
                             this.executePhysicsAction(result.line);
                         }
+                        
+                        // 数据结构场景特殊处理
+                        if (isDataStructureScenario && window.datastructureVisualizer) {
+                            this.executeDataStructureAction(result.line);
+                        }
+                        
+                        // 数学场景特殊处理
+                        if (isMathScenario && window.mathVisualizer) {
+                            this.executeMathAction(result.line);
+                        }
                     } else {
                         outputHtml += `<div class="error-line">✗ ${result.error}</div>`;
                     }
@@ -287,7 +339,7 @@ class DragBlocksEditor {
                     window.gameCanvas.executeMovements(movements);
                 }
                 
-                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario) {
+                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario) {
                     output.innerHTML = outputHtml;
                     this.showVisualization();
                 }
@@ -296,17 +348,104 @@ class DragBlocksEditor {
                 this.completeLesson();
                 
             } catch (error) {
-                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario) {
+                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario) {
                     output.innerHTML = `<div class="error-message">❌ 执行错误: ${error.message}</div>`;
                 }
             }
         } else {
             // 错误顺序
-            if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario) {
+            if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario) {
                 output.innerHTML = `
                     <div class="error-message">❌ 代码顺序错误！</div>
                     <div class="hint">正确顺序应该是: ${this.correctOrder.map(id => this.blocks[id].text).join(' → ')}</div>
                 `;
+            }
+        }
+    }
+
+    executeMathAction(codeLine) {
+        if (!window.mathVisualizer) return;
+        
+        if (codeLine.includes('set range')) {
+            const match = codeLine.match(/set range (-?\d+) to (-?\d+)/);
+            if (match) {
+                const min = parseInt(match[1]);
+                const max = parseInt(match[2]);
+                window.mathVisualizer.setRange(min, max);
+            }
+        } else if (codeLine.includes('plot ')) {
+            const match = codeLine.match(/plot (.+)/);
+            if (match) {
+                const func = match[1];
+                window.mathVisualizer.plotFunction(func);
+            }
+        } else if (codeLine.includes('draw circle at')) {
+            const match = codeLine.match(/draw circle at \((\d+), (\d+)\) radius (\d+)/);
+            if (match) {
+                const x = parseInt(match[1]);
+                const y = parseInt(match[2]);
+                const radius = parseInt(match[3]);
+                window.mathVisualizer.drawCircle(x, y, radius);
+            }
+        } else if (codeLine.includes('calculate ')) {
+            const match = codeLine.match(/calculate (.+)/);
+            if (match) {
+                const expression = match[1];
+                window.mathVisualizer.calculate(expression);
+            }
+        } else if (codeLine.includes('add point at')) {
+            const match = codeLine.match(/add point at \((-?\d+), (-?\d+)\)/);
+            if (match) {
+                const x = parseInt(match[1]);
+                const y = parseInt(match[2]);
+                window.mathVisualizer.addPoint(x, y);
+            }
+        }
+    }
+
+    executeDataStructureAction(codeLine) {
+        if (!window.datastructureVisualizer) return;
+        
+        if (codeLine.includes('stack.push(')) {
+            const match = codeLine.match(/stack\.push\((.+)\)/);
+            if (match) {
+                const value = match[1].replace(/['"]/g, '');
+                window.datastructureVisualizer.pushStack(value);
+            }
+        } else if (codeLine.includes('stack.pop()')) {
+            window.datastructureVisualizer.popStack();
+        } else if (codeLine.includes('queue.enqueue(')) {
+            const match = codeLine.match(/queue\.enqueue\((.+)\)/);
+            if (match) {
+                const value = match[1].replace(/['"]/g, '');
+                window.datastructureVisualizer.enqueue(value);
+            }
+        } else if (codeLine.includes('queue.dequeue()')) {
+            window.datastructureVisualizer.dequeue();
+        } else if (codeLine.includes('tree.insert(')) {
+            const match = codeLine.match(/tree\.insert\((.+)\)/);
+            if (match) {
+                const value = parseInt(match[1]);
+                window.datastructureVisualizer.insertTree(value);
+            }
+        } else if (codeLine.includes('heap.insert(')) {
+            const match = codeLine.match(/heap\.insert\((.+)\)/);
+            if (match) {
+                const value = parseInt(match[1]);
+                window.datastructureVisualizer.insertHeap(value);
+            }
+        } else if (codeLine.includes('graph.addNode(')) {
+            const match = codeLine.match(/graph\.addNode\((.+)\)/);
+            if (match) {
+                const value = match[1].replace(/['"]/g, '');
+                window.datastructureVisualizer.addGraphNode(value);
+            }
+        } else if (codeLine.includes('graph.addEdge(')) {
+            const match = codeLine.match(/graph\.addEdge\((.+),\s*(.+)\)/);
+            if (match) {
+                const from = match[1].replace(/['"]/g, '');
+                const to = match[2].replace(/['"]/g, '');
+                window.datastructureVisualizer.addGraphEdge(from, to);
             }
         }
     }
