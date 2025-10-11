@@ -210,79 +210,84 @@
         </div>
     </div>
 
-    <script src="gamify_editor.js"></script>
-    <script src="drag_blocks.js"></script>
     <script src="progress_system.js"></script>
+    <script src="gamify_editor.js"></script>
     <script src="game_canvas.js"></script>
     <script src="algorithm_visualizer.js"></script>
-    <script src="physics_simulator.js"></script>
     <script src="datastructure_visualizer.js"></script>
     <script src="math_visualizer.js"></script>
+    <script src="physics_simulator.js"></script>
+    <script src="drag_blocks.js"></script>
     <script>
         let currentInterpreter = null;
         let gameState = {};
         let currentScenario = '';
-        let isDragMode = false;
-
-        // 页面加载时显示进度概览
+        
+        // 页面加载时初始化应用
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化进度系统
+            window.progressSystem = new ProgressSystem();
+            
+            // 显示进度概览
             showProgressOverview();
         });
 
         function showProgressOverview() {
             const progressDiv = document.getElementById('progressOverview');
-            if (progressDiv) {
-                progressDiv.innerHTML = progressSystem.renderProgressBar() + 
-                    '<div style="margin-top: 20px;">' + progressSystem.renderCourseProgress() + '</div>';
+            if (progressDiv && window.progressSystem) {
+                progressDiv.innerHTML = window.progressSystem.renderProgressBar() + 
+                    '<div style="margin-top: 20px;">' + window.progressSystem.renderCourseProgress() + '</div>';
             }
         }
 
         function openScenario(type) {
-            console.log(`Opening scenario: ${type}`);
             currentScenario = type;
-            
-            // 初始化游戏状态
             gameState = initializeGameState(type);
-            
-            // 创建对应场景的解释器
             currentInterpreter = new CodeInterpreter(gameState, type);
-            
-            // 跳转到编辑器页面或显示编辑器界面
             showEditor(type);
+        }
+
+        function initializeGameState(scenario) {
+            const baseState = {
+                scenario: scenario,
+                draw: () => console.log('Drawing...'),
+                updateUI: () => console.log('Updating UI...')
+            };
+
+            const stateConfigs = {
+                programming: { output: [], variables: {} },
+                algorithm: { arrays: {}, visualize: (type, data) => console.log(`Visualizing ${type}:`, data) },
+                datastructure: { 
+                    stack: [], queue: [], tree: { nodes: [] },
+                    visualizeStack: () => console.log('Stack updated'),
+                    visualizeQueue: () => console.log('Queue updated'),
+                    visualizeTree: () => console.log('Tree updated')
+                },
+                math: { shapes: [], mathSettings: {}, plotFunction: (func) => console.log('Plotting:', func) },
+                physics: { objects: [], physics: {}, startPhysics: () => console.log('Starting physics') },
+                game: { player: null, entities: {}, score: 0 }
+            };
+
+            return { ...baseState, ...(stateConfigs[scenario] || {}) };
         }
 
         function showEditor(scenario) {
             const scenarioName = getScenarioName(scenario);
             
-            // 创建编辑器界面
             document.body.innerHTML = `
                 <link rel="stylesheet" href="drag_blocks.css">
                 <link rel="stylesheet" href="progress_system.css">
                 <div style="padding: 20px; max-width: 1400px; margin: 0 auto;">
-                    ${progressSystem.renderProgressBar()}
+                    ${window.progressSystem.renderProgressBar()}
                     
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h1>🎮 ${scenarioName} - 编辑器</h1>
                         <div>
-                            <button onclick="toggleMode()" id="modeBtn" style="padding: 10px 20px; background: #764ba2; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">切换到拖拽模式</button>
                             <button onclick="goBack()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">返回首页</button>
                         </div>
                     </div>
                     
-                    <div id="textEditor" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 70vh;">
-                        <div>
-                            <h3>代码编辑器</h3>
-                            <textarea id="codeEditor" style="width: 100%; height: 80%; font-family: monospace; padding: 10px; border: 1px solid #ccc; border-radius: 5px;" placeholder="${getPlaceholder(scenario)}"></textarea>
-                            <button onclick="runCode()" style="margin-top: 10px; padding: 10px 20px; background: #48bb78; color: white; border: none; border-radius: 5px; cursor: pointer;">运行代码</button>
-                        </div>
-                        
-                        <div>
-                            <h3>执行结果</h3>
-                            <div id="output" style="width: 100%; height: 80%; border: 1px solid #ccc; border-radius: 5px; padding: 10px; background: #f8f9fa; overflow-y: auto; font-family: monospace;"></div>
-                        </div>
-                    </div>
-                    
-                    <div id="dragEditor" style="display: none;">
+                    <div id="dragEditor">
                         <!-- 拖拽编辑器将在这里动态生成 -->
                     </div>
                     
@@ -293,7 +298,34 @@
                 </div>
             `;
             
+            // 直接初始化拖拽编辑器
+            window.dragEditor = new DragBlocksEditor(currentScenario, gameState);
+            document.getElementById('dragEditor').innerHTML = window.dragEditor.render();
+            window.dragEditor.initializeDragAndDrop();
+            
             updateGameStateDisplay();
+        }
+
+        function toggleMode() {
+            isDragMode = !isDragMode;
+            const textEditor = document.getElementById('textEditor');
+            const dragEditorDiv = document.getElementById('dragEditor');
+            const modeBtn = document.getElementById('modeBtn');
+            
+            if (isDragMode) {
+                textEditor.style.display = 'none';
+                dragEditorDiv.style.display = 'block';
+                modeBtn.textContent = '切换到文本模式';
+                
+                window.dragEditor = new DragBlocksEditor(currentScenario, gameState);
+                dragEditorDiv.innerHTML = window.dragEditor.render();
+                window.dragEditor.initializeDragAndDrop();
+                
+            } else {
+                textEditor.style.display = 'grid';
+                dragEditorDiv.style.display = 'none';
+                modeBtn.textContent = '切换到拖拽模式';
+            }
         }
 
         function runCode() {
@@ -321,13 +353,12 @@
                 
                 outputDiv.innerHTML = output;
                 
-                // 如果有成功执行的代码，给予XP奖励
-                if (hasSuccess) {
-                    const lessonId = progressSystem.getCurrentLesson(currentScenario);
-                    const reward = progressSystem.completeLesson(currentScenario, lessonId);
+                if (hasSuccess && window.progressSystem) {
+                    const lessonId = window.progressSystem.getCurrentLesson(currentScenario);
+                    const reward = window.progressSystem.completeLesson(currentScenario, lessonId);
                     
                     if (reward && !reward.alreadyCompleted) {
-                        progressSystem.showReward(reward);
+                        window.progressSystem.showReward(reward);
                         updateProgressHeader();
                     }
                 }
@@ -342,163 +373,7 @@
         function updateProgressHeader() {
             const progressHeader = document.querySelector('.progress-header');
             if (progressHeader) {
-                progressHeader.outerHTML = progressSystem.renderProgressBar();
-            }
-        }
-
-        function toggleMode() {
-            isDragMode = !isDragMode;
-            const textEditor = document.getElementById('textEditor');
-            const dragEditorDiv = document.getElementById('dragEditor');
-            const modeBtn = document.getElementById('modeBtn');
-            
-            if (isDragMode) {
-                // 切换到拖拽模式
-                textEditor.style.display = 'none';
-                dragEditorDiv.style.display = 'block';
-                modeBtn.textContent = '切换到文本模式';
-                
-                // 初始化拖拽编辑器
-                dragEditor = new DragBlocksEditor(currentScenario, gameState);
-                dragEditorDiv.innerHTML = dragEditor.render();
-                dragEditor.initializeDragAndDrop();
-                
-            } else {
-                // 切换到文本模式
-                textEditor.style.display = 'grid';
-                dragEditorDiv.style.display = 'none';
-                modeBtn.textContent = '切换到拖拽模式';
-            }
-        }
-
-        function initializeGameState(scenario) {
-            const baseState = {
-                scenario: scenario,
-                draw: () => console.log('Drawing...'),
-                updateUI: () => console.log('Updating UI...')
-            };
-
-            switch (scenario) {
-                case 'programming':
-                    return { ...baseState, output: [], variables: {} };
-                case 'algorithm':
-                    return { ...baseState, arrays: {}, visualize: (type, data) => console.log(`Visualizing ${type}:`, data) };
-                case 'datastructure':
-                    return { 
-                        ...baseState, 
-                        stack: [], 
-                        queue: [], 
-                        tree: { nodes: [] },
-                        visualizeStack: () => console.log('Stack:', baseState.stack),
-                        visualizeQueue: () => console.log('Queue:', baseState.queue),
-                        visualizeTree: () => console.log('Tree:', baseState.tree)
-                    };
-                case 'math':
-                    return { 
-                        ...baseState, 
-                        shapes: [], 
-                        mathSettings: {},
-                        plotFunction: (func) => console.log('Plotting:', func)
-                    };
-                case 'physics':
-                    return { 
-                        ...baseState, 
-                        objects: [], 
-                        physics: {},
-                        startPhysics: () => console.log('Starting physics simulation')
-                    };
-                case 'game':
-                    return { 
-                        ...baseState, 
-                        player: null, 
-                        entities: {},
-                        score: 0
-                    };
-                default:
-                    return baseState;
-            }
-        }
-
-        function showEditor(scenario) {
-            const scenarioName = getScenarioName(scenario);
-            
-            // 创建编辑器界面
-            document.body.innerHTML = `
-                <link rel="stylesheet" href="drag_blocks.css">
-                <div style="padding: 20px; max-width: 1400px; margin: 0 auto;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h1>🎮 ${scenarioName} - 编辑器</h1>
-                        <div>
-                            <button onclick="toggleMode()" id="modeBtn" style="padding: 10px 20px; background: #764ba2; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">切换到拖拽模式</button>
-                            <button onclick="goBack()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">返回首页</button>
-                        </div>
-                    </div>
-                    
-                    <div id="textEditor" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 70vh;">
-                        <div>
-                            <h3>代码编辑器</h3>
-                            <textarea id="codeEditor" style="width: 100%; height: 80%; font-family: monospace; padding: 10px; border: 1px solid #ccc; border-radius: 5px;" placeholder="${getPlaceholder(scenario)}"></textarea>
-                            <button onclick="runCode()" style="margin-top: 10px; padding: 10px 20px; background: #48bb78; color: white; border: none; border-radius: 5px; cursor: pointer;">运行代码</button>
-                        </div>
-                        
-                        <div>
-                            <h3>执行结果</h3>
-                            <div id="output" style="width: 100%; height: 80%; border: 1px solid #ccc; border-radius: 5px; padding: 10px; background: #f8f9fa; overflow-y: auto; font-family: monospace;"></div>
-                        </div>
-                    </div>
-                    
-                    <div id="dragEditor" style="display: none;">
-                        <!-- 拖拽编辑器将在这里动态生成 -->
-                    </div>
-                    
-                    <div style="margin-top: 20px;">
-                        <h3>游戏状态</h3>
-                        <div id="gameState" style="padding: 10px; background: #e2e8f0; border-radius: 5px; font-family: monospace;"></div>
-                    </div>
-                </div>
-            `;
-            
-            updateGameStateDisplay();
-        }
-
-        function getPlaceholder(scenario) {
-            const placeholders = {
-                'programming': 'print("Hello World")\nx = 10\nif x > 5:\n    print("x is greater than 5")',
-                'algorithm': 'array nums = [3, 1, 4, 1, 5]\nsort nums\nsearch nums for 4',
-                'datastructure': 'stack.push(10)\nstack.push(20)\nstack.pop()\nqueue.enqueue(5)',
-                'math': 'plot y = x^2\nset range -10 to 10\ndraw circle at (0, 0) radius 5',
-                'physics': 'create ball at (100, 50)\nset gravity 9.8\nstart simulation',
-                'game': 'create player at (50, 50)\nmove player right\nscore + 10'
-            };
-            return placeholders[scenario] || '# 在这里输入代码';
-        }
-
-        function runCode() {
-            const code = document.getElementById('codeEditor').value;
-            const outputDiv = document.getElementById('output');
-            
-            if (!currentInterpreter) {
-                outputDiv.innerHTML = '<div style="color: red;">错误: 解释器未初始化</div>';
-                return;
-            }
-            
-            try {
-                const results = currentInterpreter.interpretCode(code);
-                
-                let output = '';
-                results.forEach(result => {
-                    if (result.success) {
-                        output += `<div style="color: green;">✓ ${result.line} → ${result.action}</div>`;
-                    } else {
-                        output += `<div style="color: red;">✗ ${result.line} → ${result.error}</div>`;
-                    }
-                });
-                
-                outputDiv.innerHTML = output;
-                updateGameStateDisplay();
-                
-            } catch (error) {
-                outputDiv.innerHTML = `<div style="color: red;">执行错误: ${error.message}</div>`;
+                progressHeader.outerHTML = window.progressSystem.renderProgressBar();
             }
         }
 
@@ -506,7 +381,6 @@
             const stateDiv = document.getElementById('gameState');
             if (stateDiv && gameState) {
                 const displayState = { ...gameState };
-                // 移除函数属性以便显示
                 Object.keys(displayState).forEach(key => {
                     if (typeof displayState[key] === 'function') {
                         delete displayState[key];
@@ -530,6 +404,18 @@
                 'game': '游戏开发'
             };
             return names[type] || '未知场景';
+        }
+
+        function getPlaceholder(scenario) {
+            const placeholders = {
+                'programming': 'print("Hello World")\nx = 10\nif x > 5:\n    print("x is greater than 5")',
+                'algorithm': 'array nums = [3, 1, 4, 1, 5]\nsort nums\nsearch nums for 4',
+                'datastructure': 'stack.push(10)\nstack.push(20)\nstack.pop()\nqueue.enqueue(5)',
+                'math': 'plot y = x^2\nset range -10 to 10\ndraw circle at (0, 0) radius 5',
+                'physics': 'create ball at (100, 50)\nset gravity 9.8\nstart simulation',
+                'game': 'create player at (50, 50)\nmove player right\nscore + 10'
+            };
+            return placeholders[scenario] || '# 在这里输入代码';
         }
 
         function startEditor() {
