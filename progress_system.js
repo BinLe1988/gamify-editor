@@ -66,6 +66,16 @@ class ProgressSystem {
                     { id: 'entities', name: '实体管理', xp: 30 },
                     { id: 'game_loop', name: '游戏循环', xp: 35 }
                 ]
+            },
+            cs: {
+                name: '计算机科学',
+                icon: '🎯',
+                lessons: [
+                    { id: 'hash_algorithm', name: '哈希算法', xp: 20 },
+                    { id: 'greedy_alogrithm', name: '贪心算法', xp: 25 },
+                    { id: 'network', name: '计算机网络', xp: 30 },
+                    { id: 'websocket', name: '双向通信', xp: 35 }
+                ]
             }
         };
     }

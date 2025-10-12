@@ -203,6 +203,16 @@
                     <li>得分系统</li>
                 </ul>
             </div>
+            <div class="card" onclick="openScenario('cs')">
+                <span class="card-icon">🔐</span>
+                <h3>计算机科学</h3>
+                <p>学习哈希算法，理解数据存储和检索的核心原理</p>
+                <ul class="card-features">
+                    <li>哈希函数计算</li>
+                    <li>冲突处理机制</li>
+                    <li>查找性能分析</li>
+                </ul>
+            </div>
         </div>
 
         <div class="cta">
@@ -217,6 +227,7 @@
     <script src="datastructure_visualizer.js"></script>
     <script src="math_visualizer.js"></script>
     <script src="physics_simulator.js"></script>
+    <script src="hash_visualizer.js"></script>
     <script src="drag_blocks.js"></script>
     <script>
         let currentInterpreter = null;
@@ -265,7 +276,8 @@
                 },
                 math: { shapes: [], mathSettings: {}, plotFunction: (func) => console.log('Plotting:', func) },
                 physics: { objects: [], physics: {}, startPhysics: () => console.log('Starting physics') },
-                game: { player: null, entities: {}, score: 0 }
+                game: { player: null, entities: {}, score: 0 },
+                hash: { hashTable: [], operations: [], visualizeHash: () => console.log('Hash updated') }
             };
 
             return { ...baseState, ...(stateConfigs[scenario] || {}) };
@@ -401,7 +413,8 @@
                 'datastructure': '数据结构',
                 'math': '数学建模',
                 'physics': '物理仿真',
-                'game': '游戏开发'
+                'game': '游戏开发',
+                'cs': '计算机科学'
             };
             return names[type] || '未知场景';
         }

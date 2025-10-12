@@ -41,11 +41,12 @@ class DragBlocksEditor {
                 { id: 2, code: 'apply force 5 to ball', text: '施加力' },
                 { id: 3, code: 'start simulation', text: '开始仿真' }
             ],
-            game: [
-                { id: 0, code: 'create player at (0, 0)', text: '创建玩家' },
-                { id: 1, code: 'move player right', text: '向右移动' },
-                { id: 2, code: 'move player right', text: '继续向右' },
-                { id: 3, code: 'move player down', text: '向下移动' }
+            cs: [
+                { id: 0, code: 'function hash(key)', text: '定义哈希函数' },
+                { id: 1, code: 'sum = 0', text: '初始化累加器' },
+                { id: 2, code: 'for char in key', text: '遍历字符' },
+                { id: 3, code: 'sum += ascii(char)', text: '累加ASCII值' },
+                { id: 4, code: 'return sum % 8', text: '取模运算' }
             ]
         };
         return blocks[scenario] || blocks.programming;
@@ -57,9 +58,10 @@ class DragBlocksEditor {
         const isPhysicsScenario = this.scenario === 'physics';
         const isDataStructureScenario = this.scenario === 'datastructure';
         const isMathScenario = this.scenario === 'math';
+        const isHashScenario = this.scenario === 'hash';
         
         return `
-            <div class="drag-editor ${isGameScenario ? 'game-mode' : ''} ${isAlgorithmScenario ? 'algorithm-mode' : ''} ${isPhysicsScenario ? 'physics-mode' : ''} ${isDataStructureScenario ? 'datastructure-mode' : ''} ${isMathScenario ? 'math-mode' : ''}">
+            <div class="drag-editor ${isGameScenario ? 'game-mode' : ''} ${isAlgorithmScenario ? 'algorithm-mode' : ''} ${isPhysicsScenario ? 'physics-mode' : ''} ${isDataStructureScenario ? 'datastructure-mode' : ''} ${isMathScenario ? 'math-mode' : ''} ${isHashScenario ? 'hash-mode' : ''}">
                 <div class="blocks-palette">
                     <h3>代码块</h3>
                     <div class="blocks-container" id="blocksContainer">
@@ -138,6 +140,18 @@ class DragBlocksEditor {
                     <canvas id="mathCanvas" class="math-canvas"></canvas>
                     <div class="math-controls">
                         <div class="control-hint">💡 观察数学函数和图形的绘制过程</div>
+                    </div>
+                </div>
+                ` : isHashScenario ? `
+                <div class="hash-panel">
+                    <h3>哈希算法可视化</h3>
+                    <div class="hash-info">
+                        <span id="hashStatus">准备就绪</span>
+                        <button onclick="hashVisualizer?.reset()" class="reset-btn">重置</button>
+                    </div>
+                    <canvas id="hashCanvas" class="hash-canvas"></canvas>
+                    <div class="hash-controls">
+                        <div class="control-hint">💡 观察哈希算法的计算和存储过程</div>
                     </div>
                 </div>
                 ` : `
@@ -228,6 +242,13 @@ class DragBlocksEditor {
                 window.mathVisualizer = new MathVisualizer('mathCanvas');
             }, 100);
         }
+        
+        // 如果是哈希场景，初始化哈希可视化器
+        if (this.scenario === 'hash') {
+            setTimeout(() => {
+                window.hashVisualizer = new HashVisualizer('hashCanvas');
+            }, 100);
+        }
     }
 
     addBlockToDropArea(blockId) {
@@ -277,13 +298,14 @@ class DragBlocksEditor {
         }
     }
 
-    executeCode() {
+    async executeCode() {
         const isGameScenario = this.scenario === 'game';
         const isAlgorithmScenario = this.scenario === 'algorithm';
         const isPhysicsScenario = this.scenario === 'physics';
         const isDataStructureScenario = this.scenario === 'datastructure';
         const isMathScenario = this.scenario === 'math';
-        const output = (isGameScenario || isAlgorithmScenario || isPhysicsScenario || isDataStructureScenario || isMathScenario) ? 
+        const isHashScenario = this.scenario === 'hash';
+        const output = (isGameScenario || isAlgorithmScenario || isPhysicsScenario || isDataStructureScenario || isMathScenario || isHashScenario) ? 
             document.createElement('div') : 
             document.getElementById('dragOutput');
         
@@ -300,46 +322,52 @@ class DragBlocksEditor {
                 let outputHtml = '<div class="success-message">✅ 代码顺序正确！执行成功</div>';
                 const movements = [];
                 
-                results.forEach(result => {
-                    if (result.success) {
-                        outputHtml += `<div class="success-line">✓ ${result.action}</div>`;
-                        
-                        // 游戏场景特殊处理 - 收集移动命令
-                        if (isGameScenario && window.gameCanvas) {
-                            const movement = this.extractMovement(result.line);
-                            if (movement) movements.push(movement);
+                // 哈希场景需要按顺序执行
+                if (isHashScenario && window.hashVisualizer) {
+                    await this.executeHashSequence(results);
+                } else {
+                    // 其他场景的处理
+                    results.forEach(result => {
+                        if (result.success) {
+                            outputHtml += `<div class="success-line">✓ ${result.action}</div>`;
+                            
+                            // 游戏场景特殊处理 - 收集移动命令
+                            if (isGameScenario && window.gameCanvas) {
+                                const movement = this.extractMovement(result.line);
+                                if (movement) movements.push(movement);
+                            }
+                            
+                            // 算法场景特殊处理
+                            if (isAlgorithmScenario && window.algorithmVisualizer) {
+                                this.executeAlgorithmAction(result.line);
+                            }
+                            
+                            // 物理场景特殊处理
+                            if (isPhysicsScenario && window.physicsSimulator) {
+                                this.executePhysicsAction(result.line);
+                            }
+                            
+                            // 数据结构场景特殊处理
+                            if (isDataStructureScenario && window.datastructureVisualizer) {
+                                this.executeDataStructureAction(result.line);
+                            }
+                            
+                            // 数学场景特殊处理
+                            if (isMathScenario && window.mathVisualizer) {
+                                this.executeMathAction(result.line);
+                            }
+                        } else {
+                            outputHtml += `<div class="error-line">✗ ${result.error}</div>`;
                         }
-                        
-                        // 算法场景特殊处理
-                        if (isAlgorithmScenario && window.algorithmVisualizer) {
-                            this.executeAlgorithmAction(result.line);
-                        }
-                        
-                        // 物理场景特殊处理
-                        if (isPhysicsScenario && window.physicsSimulator) {
-                            this.executePhysicsAction(result.line);
-                        }
-                        
-                        // 数据结构场景特殊处理
-                        if (isDataStructureScenario && window.datastructureVisualizer) {
-                            this.executeDataStructureAction(result.line);
-                        }
-                        
-                        // 数学场景特殊处理
-                        if (isMathScenario && window.mathVisualizer) {
-                            this.executeMathAction(result.line);
-                        }
-                    } else {
-                        outputHtml += `<div class="error-line">✗ ${result.error}</div>`;
-                    }
-                });
+                    });
+                }
                 
                 // 游戏场景执行动画移动
                 if (isGameScenario && window.gameCanvas && movements.length > 0) {
                     window.gameCanvas.executeMovements(movements);
                 }
                 
-                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario) {
+                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario && !isHashScenario) {
                     output.innerHTML = outputHtml;
                     this.showVisualization();
                 }
@@ -348,18 +376,51 @@ class DragBlocksEditor {
                 this.completeLesson();
                 
             } catch (error) {
-                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario) {
+                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario && !isHashScenario) {
                     output.innerHTML = `<div class="error-message">❌ 执行错误: ${error.message}</div>`;
                 }
             }
         } else {
             // 错误顺序
-            if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario) {
+            if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario && !isHashScenario) {
                 output.innerHTML = `
                     <div class="error-message">❌ 代码顺序错误！</div>
                     <div class="hint">正确顺序应该是: ${this.correctOrder.map(id => this.blocks[id].text).join(' → ')}</div>
                 `;
             }
+        }
+    }
+
+    async executeHashSequence(results) {
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.success) {
+                await this.executeHashAction(result.line);
+                // 每个操作后等待0.5秒
+                if (i < results.length - 1) {
+                    await this.delay(500);
+                }
+            }
+        }
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async executeHashAction(codeLine) {
+        if (!window.hashVisualizer) return;
+        
+        if (codeLine.includes('function hash')) {
+            await window.hashVisualizer.showDefineFunction();
+        } else if (codeLine.includes('sum = 0')) {
+            await window.hashVisualizer.showInitializeSum();
+        } else if (codeLine.includes('for char in')) {
+            await window.hashVisualizer.showStartLoop();
+        } else if (codeLine.includes('sum += ascii')) {
+            await window.hashVisualizer.showAddAscii();
+        } else if (codeLine.includes('return sum %')) {
+            await window.hashVisualizer.showReturnModulo();
         }
     }
 

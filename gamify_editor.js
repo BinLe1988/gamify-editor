@@ -50,6 +50,14 @@ class CodeInterpreter {
                 { pattern: /^move\s+(\w+)\s+(up|down|left|right)$/i, action: (m) => this.moveEntity(m[1], m[2]) },
                 { pattern: /^score\s*\+\s*(\d+)$/i, action: (m) => this.addScore(parseInt(m[1])) },
                 { pattern: /^spawn\s+(\w+)\s+at\s+\((\d+),\s*(\d+)\)$/i, action: (m) => this.spawnEntity(m[1], parseInt(m[2]), parseInt(m[3])) }
+            ],
+            // 哈希算法场景
+            cs: [
+                { pattern: /^function\s+hash\((\w+)\)$/i, action: (m) => this.defineHashFunction(m[1]) },
+                { pattern: /^sum\s*=\s*0$/i, action: (m) => this.initializeSum() },
+                { pattern: /^for\s+(\w+)\s+in\s+(\w+)$/i, action: (m) => this.startLoop(m[1], m[2]) },
+                { pattern: /^sum\s*\+=\s*ascii\((\w+)\)$/i, action: (m) => this.addAscii(m[1]) },
+                { pattern: /^return\s+sum\s*%\s*(\d+)$/i, action: (m) => this.returnModulo(parseInt(m[1])) }
             ]
         };
     }
@@ -264,6 +272,42 @@ class CodeInterpreter {
         this.game.entities[id] = { type, x, y };
         this.game.draw?.();
         return `生成 ${type}: 位置(${x}, ${y})`;
+    }
+
+    // 哈希算法场景方法
+    defineHashFunction(parameter) {
+        if (!this.game.hashAlgorithm) this.game.hashAlgorithm = {};
+        this.game.hashAlgorithm.parameter = parameter;
+        this.game.hashAlgorithm.step = 'define';
+        return `定义哈希函数: hash(${parameter})`;
+    }
+
+    initializeSum() {
+        if (!this.game.hashAlgorithm) this.game.hashAlgorithm = {};
+        this.game.hashAlgorithm.sum = 0;
+        this.game.hashAlgorithm.step = 'initialize';
+        return `初始化累加器: sum = 0`;
+    }
+
+    startLoop(char, key) {
+        if (!this.game.hashAlgorithm) this.game.hashAlgorithm = {};
+        this.game.hashAlgorithm.currentChar = char;
+        this.game.hashAlgorithm.key = key;
+        this.game.hashAlgorithm.step = 'loop';
+        return `开始遍历: for ${char} in ${key}`;
+    }
+
+    addAscii(char) {
+        if (!this.game.hashAlgorithm) this.game.hashAlgorithm = {};
+        this.game.hashAlgorithm.step = 'accumulate';
+        return `累加ASCII值: sum += ascii(${char})`;
+    }
+
+    returnModulo(modulus) {
+        if (!this.game.hashAlgorithm) this.game.hashAlgorithm = {};
+        this.game.hashAlgorithm.modulus = modulus;
+        this.game.hashAlgorithm.step = 'return';
+        return `返回结果: sum % ${modulus}`;
     }
 
     // 切换场景
