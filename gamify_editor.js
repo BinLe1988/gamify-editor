@@ -58,6 +58,21 @@ class CodeInterpreter {
                 { pattern: /^for\s+(\w+)\s+in\s+(\w+)$/i, action: (m) => this.startLoop(m[1], m[2]) },
                 { pattern: /^sum\s*\+=\s*ascii\((\w+)\)$/i, action: (m) => this.addAscii(m[1]) },
                 { pattern: /^return\s+sum\s*%\s*(\d+)$/i, action: (m) => this.returnModulo(parseInt(m[1])) }
+            ],
+            // 策略游戏场景
+            strategy: [
+                { pattern: /^define\s+strategy\s+"(.+)"$/i, action: (m) => this.defineStrategy(m[1]) },
+                { pattern: /^set\s+goal\s+"(.+)"$/i, action: (m) => this.setGoal(m[1]) },
+                { pattern: /^build\s+(\w+)\s+at\s+\((\d+),\s*(\d+)\)$/i, action: (m) => this.buildStructure(m[1], parseInt(m[2]), parseInt(m[3])) },
+                { pattern: /^train\s+(\w+)\s+at\s+\((\d+),\s*(\d+)\)$/i, action: (m) => this.trainUnit(m[1], parseInt(m[2]), parseInt(m[3])) },
+                { pattern: /^execute\s+strategy$/i, action: (m) => this.executeStrategy() }
+            ],
+            // AI聊天场景
+            aichat: [
+                { pattern: /^set\s+thinking\s+mode\s+"(.+)"$/i, action: (m) => this.setThinkingMode(m[1]) },
+                { pattern: /^ask\s+"(.+)"$/i, action: (m) => this.askQuestion(m[1]) },
+                { pattern: /^refine\s+prompt\s+with\s+context$/i, action: (m) => this.refinePrompt() },
+                { pattern: /^analyze\s+response\s+quality$/i, action: (m) => this.analyzeResponse() }
             ]
         };
     }
@@ -308,6 +323,57 @@ class CodeInterpreter {
         this.game.hashAlgorithm.modulus = modulus;
         this.game.hashAlgorithm.step = 'return';
         return `返回结果: sum % ${modulus}`;
+    }
+
+    // 策略游戏场景方法
+    defineStrategy(name) {
+        if (!this.game.strategy) this.game.strategy = {};
+        this.game.strategy.name = name;
+        return `定义策略: ${name}`;
+    }
+
+    setGoal(goal) {
+        if (!this.game.strategy) this.game.strategy = {};
+        this.game.strategy.goal = goal;
+        return `设定目标: ${goal}`;
+    }
+
+    buildStructure(type, x, y) {
+        if (!this.game.buildings) this.game.buildings = [];
+        this.game.buildings.push({ type, x, y });
+        return `建造 ${type} 在 (${x}, ${y})`;
+    }
+
+    trainUnit(type, x, y) {
+        if (!this.game.units) this.game.units = [];
+        this.game.units.push({ type, x, y });
+        return `训练 ${type} 在 (${x}, ${y})`;
+    }
+
+    executeStrategy() {
+        return `执行策略`;
+    }
+
+    // AI聊天场景方法
+    setThinkingMode(mode) {
+        if (!this.game.aiChat) this.game.aiChat = {};
+        this.game.aiChat.thinkingMode = mode;
+        return `设置思维模式: ${mode}`;
+    }
+
+    askQuestion(question) {
+        if (!this.game.aiChat) this.game.aiChat = {};
+        if (!this.game.aiChat.questions) this.game.aiChat.questions = [];
+        this.game.aiChat.questions.push(question);
+        return `提问: ${question}`;
+    }
+
+    refinePrompt() {
+        return `优化提示词，添加背景信息`;
+    }
+
+    analyzeResponse() {
+        return `分析AI回复质量`;
     }
 
     // 切换场景

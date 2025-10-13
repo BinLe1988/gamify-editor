@@ -213,6 +213,16 @@
                     <li>查找性能分析</li>
                 </ul>
             </div>
+            <div class="card" onclick="openScenario('aichat')">
+                <span class="card-icon">🤖</span>
+                <h3>AI Thinking Partner</h3>
+                <p>学习与AI有效对话，提升提问技巧和prompt精准度</p>
+                <ul class="card-features">
+                    <li>提问技巧训练</li>
+                    <li>Prompt优化</li>
+                    <li>思维伙伴模式</li>
+                </ul>
+            </div>
         </div>
 
         <div class="cta">
@@ -228,6 +238,8 @@
     <script src="math_visualizer.js"></script>
     <script src="physics_simulator.js"></script>
     <script src="hash_visualizer.js"></script>
+    <script src="strategy_visualizer.js"></script>
+    <script src="ai_chat_visualizer.js"></script>
     <script src="drag_blocks.js"></script>
     <script>
         let currentInterpreter = null;
@@ -277,7 +289,9 @@
                 math: { shapes: [], mathSettings: {}, plotFunction: (func) => console.log('Plotting:', func) },
                 physics: { objects: [], physics: {}, startPhysics: () => console.log('Starting physics') },
                 game: { player: null, entities: {}, score: 0 },
-                hash: { hashTable: [], operations: [], visualizeHash: () => console.log('Hash updated') }
+                hash: { hashTable: [], operations: [], visualizeHash: () => console.log('Hash updated') },
+                strategy: { resources: {}, buildings: [], units: [], strategy: null },
+                aichat: { chatHistory: [], promptQuality: {}, thinkingMode: 'brainstorm' }
             };
 
             return { ...baseState, ...(stateConfigs[scenario] || {}) };
@@ -414,7 +428,9 @@
                 'math': '数学建模',
                 'physics': '物理仿真',
                 'game': '游戏开发',
-                'cs': '计算机科学'
+                'hash': '计算及科学 - 哈希算法',
+                'strategy': '策略游戏',
+                'aichat': 'AI Thinking Partner'
             };
             return names[type] || '未知场景';
         }

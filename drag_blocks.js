@@ -47,6 +47,20 @@ class DragBlocksEditor {
                 { id: 2, code: 'for char in key', text: '遍历字符' },
                 { id: 3, code: 'sum += ascii(char)', text: '累加ASCII值' },
                 { id: 4, code: 'return sum % 8', text: '取模运算' }
+            ],
+            strategy: [
+                { id: 0, code: 'define strategy "expansion"', text: '定义扩张策略' },
+                { id: 1, code: 'set goal "control territory"', text: '设定控制目标' },
+                { id: 2, code: 'build farm at (2, 3)', text: '建造农场' },
+                { id: 3, code: 'train soldier at (1, 1)', text: '训练士兵' },
+                { id: 4, code: 'execute strategy', text: '执行策略' }
+            ],
+            aichat: [
+                { id: 0, code: 'set thinking mode "brainstorm"', text: '设置头脑风暴模式' },
+                { id: 1, code: 'ask "如何学习编程"', text: '提问：如何学习编程' },
+                { id: 2, code: 'refine prompt with context', text: '添加背景信息' },
+                { id: 3, code: 'ask "作为初学者，如何系统学习Python编程，有哪些实践项目推荐"', text: '优化后的提问' },
+                { id: 4, code: 'analyze response quality', text: '分析回复质量' }
             ]
         };
         return blocks[scenario] || blocks.programming;
@@ -59,9 +73,11 @@ class DragBlocksEditor {
         const isDataStructureScenario = this.scenario === 'datastructure';
         const isMathScenario = this.scenario === 'math';
         const isHashScenario = this.scenario === 'hash';
+        const isStrategyScenario = this.scenario === 'strategy';
+        const isAIChatScenario = this.scenario === 'aichat';
         
         return `
-            <div class="drag-editor ${isGameScenario ? 'game-mode' : ''} ${isAlgorithmScenario ? 'algorithm-mode' : ''} ${isPhysicsScenario ? 'physics-mode' : ''} ${isDataStructureScenario ? 'datastructure-mode' : ''} ${isMathScenario ? 'math-mode' : ''} ${isHashScenario ? 'hash-mode' : ''}">
+            <div class="drag-editor ${isGameScenario ? 'game-mode' : ''} ${isAlgorithmScenario ? 'algorithm-mode' : ''} ${isPhysicsScenario ? 'physics-mode' : ''} ${isDataStructureScenario ? 'datastructure-mode' : ''} ${isMathScenario ? 'math-mode' : ''} ${isHashScenario ? 'hash-mode' : ''} ${isStrategyScenario ? 'strategy-mode' : ''} ${isAIChatScenario ? 'aichat-mode' : ''}">
                 <div class="blocks-palette">
                     <h3>代码块</h3>
                     <div class="blocks-container" id="blocksContainer">
@@ -152,6 +168,30 @@ class DragBlocksEditor {
                     <canvas id="hashCanvas" class="hash-canvas"></canvas>
                     <div class="hash-controls">
                         <div class="control-hint">💡 观察哈希算法的计算和存储过程</div>
+                    </div>
+                </div>
+                ` : isStrategyScenario ? `
+                <div class="strategy-panel">
+                    <h3>策略游戏</h3>
+                    <div class="strategy-info">
+                        <span id="strategyStatus">准备就绪</span>
+                        <button onclick="strategyVisualizer?.reset()" class="reset-btn">重置</button>
+                    </div>
+                    <canvas id="strategyCanvas" class="strategy-canvas"></canvas>
+                    <div class="strategy-controls">
+                        <div class="control-hint">💡 通过代码制定策略规划游戏目标</div>
+                    </div>
+                </div>
+                ` : isAIChatScenario ? `
+                <div class="aichat-panel">
+                    <h3>AI Thinking Partner</h3>
+                    <div class="aichat-info">
+                        <span id="aiChatStatus">准备就绪</span>
+                        <button onclick="aiChatVisualizer?.reset()" class="reset-btn">重置</button>
+                    </div>
+                    <canvas id="aiChatCanvas" class="aichat-canvas"></canvas>
+                    <div class="aichat-controls">
+                        <div class="control-hint">💡 学习如何与AI有效对话，提升提问技巧</div>
                     </div>
                 </div>
                 ` : `
@@ -249,6 +289,20 @@ class DragBlocksEditor {
                 window.hashVisualizer = new HashVisualizer('hashCanvas');
             }, 100);
         }
+        
+        // 如果是策略场景，初始化策略可视化器
+        if (this.scenario === 'strategy') {
+            setTimeout(() => {
+                window.strategyVisualizer = new StrategyVisualizer('strategyCanvas');
+            }, 100);
+        }
+        
+        // 如果是AI聊天场景，初始化AI聊天可视化器
+        if (this.scenario === 'aichat') {
+            setTimeout(() => {
+                window.aiChatVisualizer = new AIChatVisualizer('aiChatCanvas');
+            }, 100);
+        }
     }
 
     addBlockToDropArea(blockId) {
@@ -305,7 +359,8 @@ class DragBlocksEditor {
         const isDataStructureScenario = this.scenario === 'datastructure';
         const isMathScenario = this.scenario === 'math';
         const isHashScenario = this.scenario === 'hash';
-        const output = (isGameScenario || isAlgorithmScenario || isPhysicsScenario || isDataStructureScenario || isMathScenario || isHashScenario) ? 
+        const isAIChatScenario = this.scenario === 'aichat';
+        const output = (isGameScenario || isAlgorithmScenario || isPhysicsScenario || isDataStructureScenario || isMathScenario || isHashScenario || isStrategyScenario || isAIChatScenario) ? 
             document.createElement('div') : 
             document.getElementById('dragOutput');
         
@@ -325,6 +380,10 @@ class DragBlocksEditor {
                 // 哈希场景需要按顺序执行
                 if (isHashScenario && window.hashVisualizer) {
                     await this.executeHashSequence(results);
+                } else if (isStrategyScenario && window.strategyVisualizer) {
+                    await this.executeStrategySequence(results);
+                } else if (isAIChatScenario && window.aiChatVisualizer) {
+                    await this.executeAIChatSequence(results);
                 } else {
                     // 其他场景的处理
                     results.forEach(result => {
@@ -367,7 +426,7 @@ class DragBlocksEditor {
                     window.gameCanvas.executeMovements(movements);
                 }
                 
-                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario && !isHashScenario) {
+                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario && !isHashScenario && !isStrategyScenario && !isAIChatScenario) {
                     output.innerHTML = outputHtml;
                     this.showVisualization();
                 }
@@ -376,18 +435,67 @@ class DragBlocksEditor {
                 this.completeLesson();
                 
             } catch (error) {
-                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario && !isHashScenario) {
+                if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario && !isHashScenario && !isStrategyScenario && !isAIChatScenario) {
                     output.innerHTML = `<div class="error-message">❌ 执行错误: ${error.message}</div>`;
                 }
             }
         } else {
             // 错误顺序
-            if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario && !isHashScenario) {
+            if (!isGameScenario && !isAlgorithmScenario && !isPhysicsScenario && !isDataStructureScenario && !isMathScenario && !isHashScenario && !isStrategyScenario && !isAIChatScenario) {
                 output.innerHTML = `
                     <div class="error-message">❌ 代码顺序错误！</div>
                     <div class="hint">正确顺序应该是: ${this.correctOrder.map(id => this.blocks[id].text).join(' → ')}</div>
                 `;
             }
+        }
+    }
+
+    async executeStrategySequence(results) {
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.success) {
+                await this.executeStrategyAction(result.line);
+                // 每个操作后等待0.5秒
+                if (i < results.length - 1) {
+                    await this.delay(500);
+                }
+            }
+        }
+    }
+
+    async executeStrategyAction(codeLine) {
+        if (!window.strategyVisualizer) return;
+        
+        if (codeLine.includes('define strategy')) {
+            const match = codeLine.match(/define strategy "(.+)"/);
+            if (match) {
+                const name = match[1];
+                await window.strategyVisualizer.defineStrategy(name);
+            }
+        } else if (codeLine.includes('set goal')) {
+            const match = codeLine.match(/set goal "(.+)"/);
+            if (match) {
+                const goal = match[1];
+                await window.strategyVisualizer.setGoal(goal);
+            }
+        } else if (codeLine.includes('build')) {
+            const match = codeLine.match(/build (\w+) at \((\d+), (\d+)\)/);
+            if (match) {
+                const type = match[1];
+                const x = parseInt(match[2]);
+                const y = parseInt(match[3]);
+                await window.strategyVisualizer.buildStructure(type, x, y);
+            }
+        } else if (codeLine.includes('train')) {
+            const match = codeLine.match(/train (\w+) at \((\d+), (\d+)\)/);
+            if (match) {
+                const type = match[1];
+                const x = parseInt(match[2]);
+                const y = parseInt(match[3]);
+                await window.strategyVisualizer.trainUnit(type, x, y);
+            }
+        } else if (codeLine.includes('execute strategy')) {
+            await window.strategyVisualizer.executeStrategy();
         }
     }
 
@@ -620,6 +728,44 @@ class DragBlocksEditor {
                 visualization.querySelector('.particles').appendChild(particle);
             }
         }, 500);
+    }
+
+    async executeAIChatSequence(results) {
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.success) {
+                await this.executeAIChatAction(result.line);
+                // 每个操作后等待0.5秒
+                if (i < results.length - 1) {
+                    await this.delay(500);
+                }
+            }
+        }
+    }
+
+    async executeAIChatAction(codeLine) {
+        if (!window.aiChatVisualizer) return;
+        
+        if (codeLine.includes('set thinking mode')) {
+            const match = codeLine.match(/set thinking mode "(.+)"/);
+            if (match) {
+                const mode = match[1];
+                const modeMap = { '头脑风暴': 'brainstorm', '深度分析': 'analyze', '精细优化': 'refine' };
+                window.aiChatVisualizer.setThinkingMode(modeMap[mode] || mode);
+            }
+        } else if (codeLine.includes('ask ')) {
+            const match = codeLine.match(/ask "(.+)"/);
+            if (match) {
+                const prompt = match[1];
+                await window.aiChatVisualizer.sendPrompt(prompt);
+            }
+        } else if (codeLine.includes('refine prompt')) {
+            window.aiChatVisualizer.updateStatus('正在优化提示词...');
+            await window.aiChatVisualizer.delay(500);
+        } else if (codeLine.includes('analyze response')) {
+            window.aiChatVisualizer.updateStatus('分析AI回复质量...');
+            await window.aiChatVisualizer.delay(500);
+        }
     }
 }
 
